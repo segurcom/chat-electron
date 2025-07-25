@@ -1,0 +1,40 @@
+{
+  "name": "chat-electron",
+  "version": "1.0.0",
+  "description": "Chat encriptado punto a punto sin registros",
+  "author": "Rodrigo Gonzalez Godoy",
+  "main": "main.js",
+  "build": {
+    "productName": "Chat Segurito",
+    "appId": "com.chat.segurito",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.utilities"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility"
+    },
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "scripts": {
+    "start": "electron --no-sandbox .",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.13.2",
+    "simple-peer": "^9.11.1"
+  }
+}
