@@ -4,10 +4,10 @@ let peer;
 let key;
 
 async function initCrypto() {
-  const password = prompt("🔐 Ingresá la contraseña compartida (ambos deben usar la misma):");
+  const password = prompt("🔐 Ingresá la misma contraseña en ambos navegadores:");
 
   const encoder = new TextEncoder();
-  const salt = encoder.encode("chat-segurito-2024"); // Podés personalizarlo
+  const salt = encoder.encode("chat-segurito-salt");
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
     encoder.encode(password),
@@ -42,8 +42,19 @@ function setConnected(connected) {
 
 document.getElementById('send').disabled = true;
 
+// Configuración WebRTC con STUN público
+const rtcConfig = {
+  initiator: true, // o false según el caso
+  trickle: false,
+  config: {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' } // STUN público de Google
+    ]
+  }
+};
+
 document.getElementById('start').onclick = () => {
-  peer = new SimplePeer({ initiator: true, trickle: false });
+  peer = new SimplePeer({ ...rtcConfig, initiator: true });
 
   peer.on('signal', data => {
     document.getElementById('offer').value = JSON.stringify(data);
@@ -58,13 +69,17 @@ document.getElementById('start').onclick = () => {
     const decrypted = await decryptMessage(data);
     log(`👤 ${decrypted}`);
   });
+
+  peer.on('error', err => {
+    log(`❌ Error: ${err.message}`);
+  });
 };
 
 document.getElementById('connect').onclick = () => {
   const offerText = document.getElementById('offer').value;
   if (!offerText) return alert('Pegá el offer antes de conectar.');
 
-  peer = new SimplePeer({ initiator: false, trickle: false });
+  peer = new SimplePeer({ ...rtcConfig, initiator: false });
 
   peer.signal(JSON.parse(offerText));
 
@@ -80,6 +95,10 @@ document.getElementById('connect').onclick = () => {
   peer.on('data', async data => {
     const decrypted = await decryptMessage(data);
     log(`👤 ${decrypted}`);
+  });
+
+  peer.on('error', err => {
+    log(`❌ Error: ${err.message}`);
   });
 };
 
@@ -129,4 +148,5 @@ async function decryptMessage(data) {
   }
 }
 
+// Inicializar clave al cargar
 initCrypto();
