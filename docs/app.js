@@ -1,4 +1,4 @@
-const SimplePeer = require('simple-peer');
+const SimplePeer = window.SimplePeer;
 
 let peer;
 
