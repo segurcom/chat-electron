@@ -1,6 +1,15 @@
 const SimplePeer = window.SimplePeer;
 
 let peer;
+let key;
+
+async function initCrypto() {
+  key = await window.crypto.subtle.generateKey(
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt']
+  );
+}
 
 function log(msg) {
   const logArea = document.getElementById('log');
@@ -45,12 +54,6 @@ document.getElementById('send').onclick = async () => {
   document.getElementById('message').value = '';
 };
 
-const key = await window.crypto.subtle.generateKey(
-  { name: 'AES-GCM', length: 256 },
-  true,
-  ['encrypt', 'decrypt']
-);
-
 async function encryptMessage(msg) {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encoded = new TextEncoder().encode(msg);
@@ -71,3 +74,6 @@ async function decryptMessage(data) {
     return '[Mensaje no pudo ser desencriptado]';
   }
 }
+
+// Iniciar al cargar la página
+initCrypto();
