@@ -2,20 +2,27 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Secure Chat</title>
+  <title>Chat Seguro P2P</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/simple-peer@9/simplepeer.min.js"></script>
 </head>
 <body>
   <h1>Chat Seguro P2P</h1>
-  <textarea id="log" readonly></textarea><br>
+
+  <textarea id="log" readonly placeholder="Mensajes recibidos..."></textarea><br>
   <input id="message" placeholder="Escribe..." />
   <button id="send">Enviar</button>
+
   <hr>
+
   <button id="start">Crear conexión</button>
   <button id="connect">Conectar</button>
-  <textarea id="offer"></textarea>
-  <textarea id="answer"></textarea>
-  <script src="./app.js"></script>
+  <button id="finish">Finalizar conexión</button>
+
+  <h3>Offer / Answer</h3>
+  <textarea id="offer" placeholder="Offer o Answer aquí..."></textarea>
+  <textarea id="answer" placeholder="Respuesta aquí (solo para iniciar conexión)"></textarea>
+
+  <script src="app.js"></script>
 </body>
 </html>

@@ -1,11 +1,27 @@
 body {
   font-family: sans-serif;
-  padding: 10px;
+  padding: 1rem;
+  max-width: 600px;
+  margin: auto;
+  background: #f4f4f4;
 }
+
 textarea {
   width: 100%;
   height: 80px;
+  margin: 0.5rem 0;
 }
+
 #log {
-  height: 300px;
+  height: 200px;
+  background: #fff;
+}
+
+input {
+  width: 80%;
+  margin-bottom: 0.5rem;
+}
+
+button {
+  margin: 0.5rem 0.25rem;
 }

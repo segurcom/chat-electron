@@ -4,10 +4,29 @@ let peer;
 let key;
 
 async function initCrypto() {
-  key = await window.crypto.subtle.generateKey(
-    { name: 'AES-GCM', length: 256 },
-    true,
-    ['encrypt', 'decrypt']
+  const password = prompt("🔐 Ingresá la contraseña compartida (ambos deben usar la misma):");
+
+  const encoder = new TextEncoder();
+  const salt = encoder.encode("chat-segurito-2024"); // Podés personalizarlo
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(password),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"]
+  );
+
+  key = await crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt,
+      iterations: 100000,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
   );
 }
 
@@ -17,6 +36,12 @@ function log(msg) {
   logArea.scrollTop = logArea.scrollHeight;
 }
 
+function setConnected(connected) {
+  document.getElementById('send').disabled = !connected;
+}
+
+document.getElementById('send').disabled = true;
+
 document.getElementById('start').onclick = () => {
   peer = new SimplePeer({ initiator: true, trickle: false });
 
@@ -24,33 +49,62 @@ document.getElementById('start').onclick = () => {
     document.getElementById('offer').value = JSON.stringify(data);
   });
 
+  peer.on('connect', () => {
+    log('✅ Conectado (initiator)');
+    setConnected(true);
+  });
+
   peer.on('data', async data => {
     const decrypted = await decryptMessage(data);
-    log(`> ${decrypted}`);
+    log(`👤 ${decrypted}`);
   });
 };
 
 document.getElementById('connect').onclick = () => {
-  const offer = JSON.parse(document.getElementById('offer').value);
+  const offerText = document.getElementById('offer').value;
+  if (!offerText) return alert('Pegá el offer antes de conectar.');
+
   peer = new SimplePeer({ initiator: false, trickle: false });
 
-  peer.signal(offer);
+  peer.signal(JSON.parse(offerText));
 
   peer.on('signal', data => {
     document.getElementById('answer').value = JSON.stringify(data);
   });
 
+  peer.on('connect', () => {
+    log('✅ Conectado (receptor)');
+    setConnected(true);
+  });
+
   peer.on('data', async data => {
     const decrypted = await decryptMessage(data);
-    log(`> ${decrypted}`);
+    log(`👤 ${decrypted}`);
   });
 };
 
+document.getElementById('finish').onclick = () => {
+  const answerText = document.getElementById('answer').value;
+  if (!answerText) return alert('Pegá el answer antes de finalizar la conexión.');
+
+  try {
+    peer.signal(JSON.parse(answerText));
+    log('✅ Answer procesado. Conexión en curso...');
+  } catch (e) {
+    log('❌ Error al procesar el answer');
+  }
+};
+
 document.getElementById('send').onclick = async () => {
+  if (!peer || peer._channel?.readyState !== 'open') {
+    log('⛔ La conexión aún no está lista.');
+    return;
+  }
+
   const msg = document.getElementById('message').value;
   const encrypted = await encryptMessage(msg);
   peer.send(encrypted);
-  log(`Tú: ${msg}`);
+  log(`🧑‍💻 Tú: ${msg}`);
   document.getElementById('message').value = '';
 };
 
@@ -71,9 +125,8 @@ async function decryptMessage(data) {
     const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
     return new TextDecoder().decode(decrypted);
   } catch {
-    return '[Mensaje no pudo ser desencriptado]';
+    return '[❌ No se pudo desencriptar el mensaje]';
   }
 }
 
-// Iniciar al cargar la página
 initCrypto();
